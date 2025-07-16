@@ -35,22 +35,28 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
     setLoading(true)
 
     try {
-      const { error } = await supabase
+      const insertData = {
+        user_id: userId,
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        service: formData.service,
+        product_used: formData.product_used,
+        product_quantity: parseFloat(formData.product_quantity) || 0,
+        service_price: parseFloat(formData.service_price) || 0
+      }
+      
+      console.log('Inserting customer data:', insertData)
+      
+      const { data, error } = await supabase
         .from('customers')
-        .insert([
-          {
-            user_id: userId,
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email,
-            service: formData.service,
-            product_used: formData.product_used,
-            product_quantity: parseFloat(formData.product_quantity) || 0,
-            service_price: parseFloat(formData.service_price) || 0
-          }
-        ])
+        .insert([insertData])
+        .select()
+
+      console.log('Insert result:', { data, error })
 
       if (error) {
+        console.error('Insert error:', error)
         setError(error.message)
         toast.error('Failed to add customer: ' + error.message)
       } else {
