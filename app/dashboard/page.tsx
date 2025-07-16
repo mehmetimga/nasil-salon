@@ -15,14 +15,36 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  // Check if user is admin
-  const { data: roleData } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .single()
+  // Check if user is admin - with fallback
+  let isAdmin = false
+  let roleData: { role: string } | null = null
+  
+  try {
+    const { data, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single()
 
-  const isAdmin = roleData?.role === 'admin'
+    roleData = data
+
+    // Debug logging
+    console.log('User ID:', user.id)
+    console.log('Role Data:', roleData)
+    console.log('Role Error:', roleError)
+
+    isAdmin = roleData?.role === 'admin'
+  } catch (error) {
+    console.error('Error checking admin role:', error)
+    // Temporary: Check email as fallback
+    isAdmin = user.email === 'imgamehmet@gmail.com'
+  }
+  
+  // Additional fallback check
+  if (!isAdmin && user.email === 'imgamehmet@gmail.com') {
+    console.log('Using email fallback for admin check')
+    isAdmin = true
+  }
 
   // Fetch customers based on role
   let customersQuery = supabase.from('customers').select('*')
@@ -46,6 +68,10 @@ export default async function DashboardPage() {
                 Admin View - Showing all customers
               </p>
             )}
+            {/* Debug info - remove this after testing */}
+            <p className="text-xs text-gray-500 mt-2">
+              User: {user.email} | Role: {roleData?.role || 'none'} | Admin: {isAdmin ? 'Yes' : 'No'} | Method: {roleData ? 'Database' : 'Email Fallback'}
+            </p>
           </div>
           <LogoutButton />
         </div>

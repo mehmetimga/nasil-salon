@@ -52,6 +52,7 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
 
       if (error) {
         setError(error.message)
+        toast.error('Failed to add customer: ' + error.message)
       } else {
         toast.success('Customer added successfully!')
         // Reset form
@@ -64,7 +65,10 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
           product_quantity: '',
           service_price: ''
         })
+        // Force a hard refresh to reload the data
         router.refresh()
+        // Alternative: reload the entire page
+        window.location.reload()
       }
     } catch (err) {
       setError('An unexpected error occurred')
