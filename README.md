@@ -66,6 +66,65 @@ Before you begin, ensure you have:
      FOR DELETE USING (auth.uid() = user_id);
    ```
 
+3. **Set up Admin Role System (Optional)**
+   
+   To enable admin users who can view all customers:
+   
+   ```sql
+   -- Create user_roles table
+   CREATE TABLE user_roles (
+     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+     role TEXT NOT NULL DEFAULT 'user',
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     UNIQUE(user_id)
+   );
+
+   -- Enable RLS
+   ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+
+   -- Create policy
+   CREATE POLICY "Users can view their own role" ON user_roles
+     FOR SELECT USING (auth.uid() = user_id);
+
+   -- Update customers table policy to allow admins to view all records
+   DROP POLICY IF EXISTS "Users can view own customer records" ON customers;
+   
+   CREATE POLICY "Users can view customer records" ON customers
+     FOR SELECT USING (
+       auth.uid() = user_id 
+       OR 
+       EXISTS (
+         SELECT 1 FROM user_roles
+         WHERE user_roles.user_id = auth.uid() 
+         AND user_roles.role = 'admin'
+       )
+     );
+
+   -- Function to make a user admin
+   CREATE OR REPLACE FUNCTION make_user_admin(user_email TEXT)
+   RETURNS void AS $$
+   DECLARE
+     target_user_id uuid;
+   BEGIN
+     SELECT id INTO target_user_id 
+     FROM auth.users 
+     WHERE email = user_email;
+     
+     IF target_user_id IS NULL THEN
+       RAISE EXCEPTION 'User with email % not found', user_email;
+     END IF;
+     
+     INSERT INTO user_roles (user_id, role)
+     VALUES (target_user_id, 'admin')
+     ON CONFLICT (user_id) 
+     DO UPDATE SET role = 'admin';
+     
+     RAISE NOTICE 'User % is now an admin', user_email;
+   END;
+   $$ LANGUAGE plpgsql SECURITY DEFINER;
+   ```
+
 3. **Get your project credentials**
    - Go to Project Settings > API
    - Copy your `Project URL` and `anon public` key
@@ -148,6 +207,17 @@ nail-salon/
 2. **Log In**: Access your dashboard with your credentials
 3. **Add Customers**: Use the form to add new customer records
 4. **View Records**: See all your customer visits in the table
+
+### Admin Features
+
+Admin users can view all customer records across the system. To make a user an admin:
+
+1. First create the user through the signup page or Supabase Dashboard
+2. Run this SQL in Supabase SQL Editor:
+   ```sql
+   SELECT make_user_admin('user@email.com');
+   ```
+3. The user will now see all customers when they log in
 
 ## Security Notes
 
