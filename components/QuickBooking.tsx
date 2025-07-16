@@ -56,13 +56,7 @@ export default function QuickBooking({ customerId, customerName }: QuickBookingP
   const fetchServices = useCallback(async () => {
     const { data, error } = await supabase
       .from('services')
-      .select(`
-        id,
-        name,
-        price,
-        duration_minutes,
-        service_categories!category_id(name)
-      `)
+      .select('id, name, price, duration_minutes, service_categories(name)')
       .eq('is_active', true)
       .order('display_order');
     
@@ -76,7 +70,7 @@ export default function QuickBooking({ customerId, customerName }: QuickBookingP
         duration_minutes: service.duration_minutes,
         service_categories: service.service_categories || null
       }));
-      setServices(formattedServices);
+      setServices(formattedServices as unknown as Service[]);
     }
   }, [supabase]);
 

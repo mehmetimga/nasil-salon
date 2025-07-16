@@ -46,13 +46,7 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
   const fetchServices = useCallback(async () => {
     const { data, error } = await supabase
       .from('services')
-      .select(`
-        id,
-        name,
-        price,
-        duration_minutes,
-        category:service_categories!category_id(name)
-      `)
+      .select('id, name, price, duration_minutes, service_categories(name)')
       .eq('is_active', true)
       .order('display_order')
     
@@ -64,9 +58,9 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
         name: service.name,
         price: service.price,
         duration_minutes: service.duration_minutes,
-        service_categories: service.category || null
+        service_categories: service.service_categories || null
       }))
-      setServices(formattedServices)
+      setServices(formattedServices as unknown as Service[])
     }
   }, [supabase])
 
