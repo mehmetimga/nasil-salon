@@ -25,9 +25,10 @@ interface Customer {
 
 interface CustomerTableProps {
   customers: Customer[]
+  isAdmin?: boolean
 }
 
-export default function CustomerTable({ customers }: CustomerTableProps) {
+export default function CustomerTable({ customers, isAdmin = false }: CustomerTableProps) {
   if (customers.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -38,7 +39,11 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
 
   return (
     <Table>
-      <TableCaption>A list of your recent customer visits.</TableCaption>
+      <TableCaption>
+        {isAdmin 
+          ? `Showing ${customers.length} total customer records from all users.`
+          : `A list of your recent customer visits.`}
+      </TableCaption>
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
@@ -49,6 +54,7 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
           <TableHead className="text-right">Quantity</TableHead>
           <TableHead className="text-right">Price</TableHead>
           <TableHead>Date</TableHead>
+          {isAdmin && <TableHead>User ID</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -66,6 +72,11 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
                 ? new Date(customer.created_at).toLocaleDateString()
                 : 'N/A'}
             </TableCell>
+            {isAdmin && (
+              <TableCell className="text-xs text-muted-foreground">
+                {customer.user_id.slice(0, 8)}...
+              </TableCell>
+            )}
           </TableRow>
         ))}
       </TableBody>
