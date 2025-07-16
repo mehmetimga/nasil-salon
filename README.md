@@ -1,6 +1,6 @@
-# Nail Salon Customer Management System
+# Nail Salon Management System
 
-A modern web application for managing nail salon customers built with Next.js, Supabase, and shadcn/ui.
+A comprehensive web application for managing nail salon operations including customer records, service catalog, appointments, and more. Built with Next.js, Supabase, and shadcn/ui.
 
 ## Tech Stack
 
@@ -11,11 +11,24 @@ A modern web application for managing nail salon customers built with Next.js, S
 
 ## Features
 
+### Implemented
 - 🔐 User authentication (signup/login)
 - 📊 Customer management dashboard
 - ➕ Add new customer records
+- 💅 Service catalog with categories and pricing
+- 📅 Appointment booking system with calendar view
+- 👨‍💼 Basic staff management
+- 🔄 Quick booking from customer records
+- 👥 Role-based access control (Admin/User)
 - 📱 Responsive design
 - 🎨 Modern UI with shadcn/ui components
+
+### In Development
+- 💳 Payment processing and checkout
+- 📊 Analytics dashboard
+- 🎁 Loyalty rewards program
+- 📦 Inventory management
+- 🎟️ Gift vouchers and coupons
 
 ## Prerequisites
 
@@ -125,6 +138,14 @@ Before you begin, ensure you have:
    $$ LANGUAGE plpgsql SECURITY DEFINER;
    ```
 
+4. **Set up Service Catalog**
+   
+   Run the SQL from `sql/service_catalog.sql` to create the service tables and sample data.
+
+5. **Set up Appointments and Staff**
+   
+   Run the SQL from `sql/appointments_and_staff.sql` to create appointment booking tables, staff management, and sample data.
+
 3. **Get your project credentials**
    - Go to Project Settings > API
    - Copy your `Project URL` and `anon public` key
@@ -165,6 +186,7 @@ Before you begin, ensure you have:
 nail-salon/
 ├── app/                    # Next.js App Router
 │   ├── dashboard/         # Protected dashboard page
+│   │   └── services/     # Service catalog page
 │   ├── login/            # Login page
 │   ├── signup/           # Signup page
 │   ├── layout.tsx        # Root layout
@@ -172,9 +194,12 @@ nail-salon/
 ├── components/            # React components
 │   ├── CustomerForm.tsx  # Form for adding customers
 │   ├── CustomerTable.tsx # Table displaying customers
+│   ├── Navigation.tsx    # Dashboard navigation
 │   └── ui/              # shadcn/ui components
 ├── lib/                  # Utility functions
 │   └── supabase/        # Supabase client configs
+├── sql/                  # Database schemas
+│   └── service_catalog.sql # Service tables
 └── middleware.ts         # Auth middleware
 ```
 

@@ -1,0 +1,75 @@
+/* Calendar custom styles */
+.rbc-calendar {
+  font-family: inherit;
+}
+
+.rbc-header {
+  padding: 10px 3px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+}
+
+.rbc-today {
+  background-color: #f3f4f6;
+}
+
+.rbc-off-range-bg {
+  background-color: #fafafa;
+}
+
+.rbc-event {
+  padding: 2px 5px;
+  font-size: 12px;
+}
+
+.rbc-event-label {
+  font-size: 11px;
+}
+
+.rbc-toolbar {
+  margin-bottom: 20px;
+}
+
+.rbc-toolbar button {
+  padding: 6px 12px;
+  margin: 0 2px;
+  border: 1px solid #e5e7eb;
+  background-color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #f3f4f6;
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.rbc-time-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rbc-time-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top: 1px solid #f9fafb;
+}
+
+.rbc-current-time-indicator {
+  background-color: #ef4444;
+  height: 2px;
+}

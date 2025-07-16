@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -13,12 +13,26 @@ interface CustomerFormProps {
   userId: string
 }
 
+interface ServiceCategory {
+  name: string
+}
+
+interface Service {
+  id: string
+  name: string
+  price: number
+  duration_minutes: number
+  service_categories: ServiceCategory | null
+}
+
 export default function CustomerForm({ userId }: CustomerFormProps) {
   const router = useRouter()
   const supabase = createClient()
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [services, setServices] = useState<Service[]>([])
+  const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -28,6 +42,37 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
     product_quantity: '',
     service_price: ''
   })
+
+  const fetchServices = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('services')
+      .select(`
+        id,
+        name,
+        price,
+        duration_minutes,
+        category:service_categories!category_id(name)
+      `)
+      .eq('is_active', true)
+      .order('display_order')
+    
+    if (error) {
+      console.error('Error fetching services:', error)
+    } else if (data) {
+      const formattedServices = data.map((service) => ({
+        id: service.id,
+        name: service.name,
+        price: service.price,
+        duration_minutes: service.duration_minutes,
+        service_categories: service.category || null
+      }))
+      setServices(formattedServices)
+    }
+  }, [supabase])
+
+  useEffect(() => {
+    fetchServices()
+  }, [fetchServices])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +85,7 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
-        service: formData.service,
+        service: selectedService ? selectedService.name : formData.service,
         product_used: formData.product_used,
         product_quantity: parseFloat(formData.product_quantity) || 0,
         service_price: parseFloat(formData.service_price) || 0
@@ -135,14 +180,29 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="service">Service</Label>
-        <Input
+        <select
           id="service"
           name="service"
           value={formData.service}
-          onChange={handleChange}
-          placeholder="e.g., Manicure, Pedicure"
+          onChange={(e) => {
+            const service = services.find(s => s.id === e.target.value)
+            setSelectedService(service || null)
+            setFormData({
+              ...formData,
+              service: e.target.value,
+              service_price: service ? service.price.toString() : ''
+            })
+          }}
+          className="w-full p-2 border rounded"
           required
-        />
+        >
+          <option value="">Select a service</option>
+          {services.map((service) => (
+            <option key={service.id} value={service.id}>
+              {service.service_categories?.name} - {service.name} (${service.price})
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="space-y-2">
@@ -179,6 +239,7 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
             value={formData.service_price}
             onChange={handleChange}
             required
+            readOnly={selectedService !== null}
           />
         </div>
       </div>

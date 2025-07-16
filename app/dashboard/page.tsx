@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import CustomerTable from '@/components/CustomerTable'
 import CustomerForm from '@/components/CustomerForm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-
+import Navigation from '@/components/Navigation'
 import LogoutButton from '@/components/LogoutButton'
 
 export default async function DashboardPage() {
@@ -59,6 +59,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navigation />
       <div className="container mx-auto py-8 px-4">
         <div className="flex justify-between items-center mb-8">
           <div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -9,6 +10,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import QuickBooking from './QuickBooking'
 
 interface Customer {
   id: string
@@ -29,6 +39,9 @@ interface CustomerTableProps {
 }
 
 export default function CustomerTable({ customers, isAdmin = false }: CustomerTableProps) {
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [showBookingDialog, setShowBookingDialog] = useState(false)
+
   if (customers.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -38,6 +51,7 @@ export default function CustomerTable({ customers, isAdmin = false }: CustomerTa
   }
 
   return (
+    <>
     <Table>
       <TableCaption>
         {isAdmin 
@@ -55,6 +69,7 @@ export default function CustomerTable({ customers, isAdmin = false }: CustomerTa
           <TableHead className="text-right">Price</TableHead>
           <TableHead>Date</TableHead>
           {isAdmin && <TableHead>User ID</TableHead>}
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -77,9 +92,36 @@ export default function CustomerTable({ customers, isAdmin = false }: CustomerTa
                 {customer.user_id.slice(0, 8)}...
               </TableCell>
             )}
+            <TableCell>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setSelectedCustomer(customer)
+                  setShowBookingDialog(true)
+                }}
+              >
+                Book Appointment
+              </Button>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
+
+    <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Book Appointment</DialogTitle>
+        </DialogHeader>
+        {selectedCustomer && (
+          <QuickBooking
+            customerId={selectedCustomer.id}
+            customerName={selectedCustomer.name}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  </>
   )
 } 
