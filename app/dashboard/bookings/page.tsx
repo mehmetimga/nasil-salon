@@ -26,6 +26,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface BookingRequest {
   id: string;
@@ -49,6 +56,12 @@ interface BookingRequest {
   };
 }
 
+interface Staff {
+  id: string;
+  name: string;
+  is_active: boolean;
+}
+
 export default function BookingRequestsPage() {
   const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,10 +72,12 @@ export default function BookingRequestsPage() {
     time: '',
     staff_id: ''
   });
+  const [staffList, setStaffList] = useState<Staff[]>([]);
   const supabase = createClient();
 
   useEffect(() => {
     fetchBookingRequests();
+    fetchStaff();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchBookingRequests = async () => {
@@ -83,6 +98,20 @@ export default function BookingRequestsPage() {
       setBookingRequests(data || []);
     }
     setLoading(false);
+  };
+
+  const fetchStaff = async () => {
+    const { data, error } = await supabase
+      .from('staff')
+      .select('id, name, is_active')
+      .eq('is_active', true)
+      .order('name');
+    
+    if (error) {
+      console.error('Error fetching staff:', error);
+    } else {
+      setStaffList(data || []);
+    }
   };
 
   const updateBookingStatus = async (bookingId: string, status: string) => {
@@ -333,12 +362,21 @@ export default function BookingRequestsPage() {
               </div>
               <div>
                 <Label htmlFor="confirm-staff">Staff Member</Label>
-                <Input
-                  id="confirm-staff"
-                  placeholder="Staff ID (optional)"
+                <Select
                   value={confirmationDetails.staff_id}
-                  onChange={(e) => setConfirmationDetails({ ...confirmationDetails, staff_id: e.target.value })}
-                />
+                  onValueChange={(value) => setConfirmationDetails({ ...confirmationDetails, staff_id: value })}
+                >
+                  <SelectTrigger id="confirm-staff">
+                    <SelectValue placeholder="Select a staff member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {staffList.map((staff) => (
+                      <SelectItem key={staff.id} value={staff.id}>
+                        {staff.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               {selectedBooking?.notes && (
                 <div>
