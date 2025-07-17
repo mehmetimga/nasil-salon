@@ -33,6 +33,13 @@ A comprehensive web application for managing nail salon operations including cus
   - Stock movement history
   - Product categorization
   - Cost and pricing management
+- 📊 Analytics dashboard with key metrics
+  - Revenue tracking and growth trends
+  - Service performance analytics
+  - Staff productivity metrics (admin only)
+  - Customer acquisition and retention
+  - Appointment completion rates
+  - Inventory insights
 - 👥 Role-based access control (Admin/User)
 - 🔒 Secure access - only admins can create/manage users
 - 📱 Responsive design
@@ -40,7 +47,6 @@ A comprehensive web application for managing nail salon operations including cus
 
 ### In Development
 - 💳 Payment processing and checkout
-- 📊 Analytics dashboard
 - 🎁 Loyalty rewards program
 - 🎟️ Gift vouchers and coupons
 
@@ -168,13 +174,17 @@ Before you begin, ensure you have:
    
    Run the SQL from `sql/inventory.sql` to create inventory tables, product categories, and sample data.
 
-8. **Create Initial Admin User**
+8. **Set up Analytics**
+   
+   Run the SQL from `sql/analytics.sql` to create analytics functions and indexes for performance tracking.
+
+9. **Create Initial Admin User**
    
    - First, create a user account in Supabase Auth dashboard
    - Then run the SQL from `sql/create_admin_user.sql` (update the email first)
    - This admin can then manage all other users from within the app
 
-9. **Get your project credentials**
+10. **Get your project credentials**
    - Go to Project Settings > API
    - Copy your `Project URL` and `anon public` key
 

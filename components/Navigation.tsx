@@ -34,6 +34,7 @@ export default function Navigation() {
     { href: '/dashboard/bookings', label: 'Online Bookings' },
     { href: '/dashboard/services', label: 'Services' },
     { href: '/dashboard/inventory', label: 'Inventory' },
+    { href: '/dashboard/analytics', label: 'Analytics' },
     ...(isAdmin ? [{ href: '/dashboard/admin', label: 'Admin' }] : []),
   ];
 
