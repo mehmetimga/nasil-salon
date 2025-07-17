@@ -33,6 +33,7 @@ export default function Navigation() {
     { href: '/dashboard/appointments', label: 'Appointments' },
     { href: '/dashboard/bookings', label: 'Online Bookings' },
     { href: '/dashboard/services', label: 'Services' },
+    { href: '/dashboard/inventory', label: 'Inventory' },
     ...(isAdmin ? [{ href: '/dashboard/admin', label: 'Admin' }] : []),
   ];
 

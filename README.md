@@ -27,6 +27,12 @@ A comprehensive web application for managing nail salon operations including cus
 - 🔄 Quick booking from customer records
 - 🌐 Public booking website for customers
 - 📋 Online booking request management
+- 📦 Inventory management for retail products
+  - Track product stock levels
+  - Low stock alerts
+  - Stock movement history
+  - Product categorization
+  - Cost and pricing management
 - 👥 Role-based access control (Admin/User)
 - 🔒 Secure access - only admins can create/manage users
 - 📱 Responsive design
@@ -36,7 +42,6 @@ A comprehensive web application for managing nail salon operations including cus
 - 💳 Payment processing and checkout
 - 📊 Analytics dashboard
 - 🎁 Loyalty rewards program
-- 📦 Inventory management
 - 🎟️ Gift vouchers and coupons
 
 ## Prerequisites
@@ -159,13 +164,17 @@ Before you begin, ensure you have:
    
    Run the SQL from `sql/online_bookings.sql` to create online booking request tables and business info.
 
-7. **Create Initial Admin User**
+7. **Set up Inventory Management**
+   
+   Run the SQL from `sql/inventory.sql` to create inventory tables, product categories, and sample data.
+
+8. **Create Initial Admin User**
    
    - First, create a user account in Supabase Auth dashboard
    - Then run the SQL from `sql/create_admin_user.sql` (update the email first)
    - This admin can then manage all other users from within the app
 
-8. **Get your project credentials**
+9. **Get your project credentials**
    - Go to Project Settings > API
    - Copy your `Project URL` and `anon public` key
 
