@@ -13,15 +13,22 @@ A comprehensive web application for managing nail salon operations including cus
 
 ### Implemented
 - 🔐 User authentication (login only - no public signup)
-- 👤 Admin-only user management
+- 👤 Full admin user management with server-side API
+  - Create new users with email/password
+  - Update user roles (user/admin)
+  - Reset user passwords
+  - Delete users
+  - View all users with last sign-in info
 - 📊 Customer management dashboard
 - ➕ Add new customer records
 - 💅 Service catalog with categories and pricing
 - 📅 Appointment booking system with calendar view
 - 👨‍💼 Basic staff management
 - 🔄 Quick booking from customer records
+- 🌐 Public booking website for customers
+- 📋 Online booking request management
 - 👥 Role-based access control (Admin/User)
-- 🔒 Secure access - only admins can create users
+- 🔒 Secure access - only admins can create/manage users
 - 📱 Responsive design
 - 🎨 Modern UI with shadcn/ui components
 
@@ -148,13 +155,17 @@ Before you begin, ensure you have:
    
    Run the SQL from `sql/appointments_and_staff.sql` to create appointment booking tables, staff management, and sample data.
 
-6. **Create Initial Admin User**
+6. **Set up Online Booking**
+   
+   Run the SQL from `sql/online_bookings.sql` to create online booking request tables and business info.
+
+7. **Create Initial Admin User**
    
    - First, create a user account in Supabase Auth dashboard
    - Then run the SQL from `sql/create_admin_user.sql` (update the email first)
    - This admin can then manage all other users from within the app
 
-7. **Get your project credentials**
+8. **Get your project credentials**
    - Go to Project Settings > API
    - Copy your `Project URL` and `anon public` key
 

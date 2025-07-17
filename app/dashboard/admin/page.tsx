@@ -23,28 +23,35 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+import { Trash2, KeyRound, UserPlus } from 'lucide-react';
 
 interface User {
   id: string;
   email: string;
   created_at: string;
   last_sign_in_at?: string;
-  role?: string;
+  role: string;
 }
 
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
     role: 'user',
+  });
+  const [passwordReset, setPasswordReset] = useState({
+    password: '',
+    confirmPassword: ''
   });
   const router = useRouter();
   const supabase = createClient();
@@ -60,6 +67,8 @@ export default function AdminPage() {
       router.push('/login');
       return;
     }
+
+    setCurrentUserId(user.id);
 
     // Check if user is admin
     const { data: roleData } = await supabase
@@ -81,30 +90,21 @@ export default function AdminPage() {
   const fetchUsers = async () => {
     setLoading(true);
     
-    // Get all users from auth.users (requires service role key or custom RPC function)
-    // For now, we'll get users from the user_roles table
-    const { data: userRoles, error: rolesError } = await supabase
-      .from('user_roles')
-      .select('*');
-
-    if (rolesError) {
-      toast.error('Failed to fetch users');
-      console.error('Error fetching users:', rolesError);
+    try {
+      const response = await fetch('/api/admin/users');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch users');
+      }
+      
+      setUsers(data.users);
+    } catch (error) {
+      toast.error('Failed to load users');
+      console.error('Error fetching users:', error);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Since we can't access auth.users directly from client, we'll use the user_roles data
-    // In production, you might want to store email in user_roles or create an RPC function
-    const formattedUsers = (userRoles || []).map((userRole: any) => ({
-      id: userRole.user_id,
-      email: 'User ID: ' + userRole.user_id.slice(0, 8) + '...',
-      created_at: userRole.created_at,
-      role: userRole.role,
-    }));
-    
-    setUsers(formattedUsers);
-    setLoading(false);
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -120,34 +120,125 @@ export default function AdminPage() {
       return;
     }
 
-    // Note: Creating users from the client side requires the service role key
-    // In a production app, this should be done through a secure backend API
-    toast.error('User creation must be done through Supabase dashboard or a secure backend API');
-    
-    // For now, show instructions
-    toast.info('To create a user: 1) Go to Supabase Auth dashboard, 2) Create user there, 3) Run SQL to set role');
-    
-    setShowCreateDialog(false);
-    setFormData({
-      email: '',
-      password: '',
-      confirmPassword: '',
-      role: 'user',
-    });
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create user');
+      }
+
+      toast.success('User created successfully');
+      setShowCreateDialog(false);
+      setFormData({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        role: 'user',
+      });
+      fetchUsers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to create user');
+      console.error('Error creating user:', error);
+    }
   };
 
   const updateUserRole = async (userId: string, newRole: string) => {
-    const { error } = await supabase
-      .from('user_roles')
-      .update({ role: newRole })
-      .eq('user_id', userId);
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
 
-    if (error) {
-      toast.error('Failed to update user role');
-      console.error('Error updating role:', error);
-    } else {
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update role');
+      }
+
       toast.success('User role updated successfully');
       fetchUsers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update role');
+      console.error('Error updating role:', error);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (passwordReset.password !== passwordReset.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (passwordReset.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    if (!selectedUserId) return;
+
+    try {
+      const response = await fetch(`/api/admin/users/${selectedUserId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: passwordReset.password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reset password');
+      }
+
+      toast.success('Password reset successfully');
+      setShowPasswordDialog(false);
+      setPasswordReset({ password: '', confirmPassword: '' });
+      setSelectedUserId(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to reset password');
+      console.error('Error resetting password:', error);
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete user');
+      }
+
+      toast.success('User deleted successfully');
+      fetchUsers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete user');
+      console.error('Error deleting user:', error);
     }
   };
 
@@ -165,68 +256,10 @@ export default function AdminPage() {
       <div className="container mx-auto py-8 px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">User Management</h1>
-          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
-              <Button>Create User</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
-                <DialogDescription>
-                  Create a new user account for the nail salon system
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleCreateUser} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="role">Role</Label>
-                  <select
-                    id="role"
-                    className="w-full p-2 border rounded"
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-
-                <Button type="submit" className="w-full">Create User</Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setShowCreateDialog(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Create User
+          </Button>
         </div>
 
         <Card>
@@ -237,88 +270,184 @@ export default function AdminPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 p-4 bg-amber-50 text-amber-800 rounded-lg">
-              <p className="font-semibold">Note: User Creation</p>
-              <p className="text-sm mt-1">
-                For security reasons, new users must be created through the Supabase dashboard:
-              </p>
-              <ol className="list-decimal ml-5 mt-2 text-sm">
-                <li>Go to your Supabase project dashboard</li>
-                <li>Navigate to Authentication → Users</li>
-                <li>Click &quot;Add user&quot; and create the account</li>
-                <li>Return here to assign roles</li>
-              </ol>
-            </div>
-
             {loading ? (
               <div>Loading users...</div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User ID</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Created</TableHead>
+                    <TableHead>Last Sign In</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-mono text-xs">
-                        {user.id}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role || 'user'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <select
-                          className="p-1 border rounded text-sm"
-                          value={user.role || 'user'}
-                          onChange={(e) => updateUserRole(user.id, e.target.value)}
-                        >
-                          <option value="user">User</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {users.map((user) => {
+                    const isCurrentUser = currentUserId === user.id;
+                    
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <select
+                            className="p-1 border rounded text-sm"
+                            value={user.role}
+                            onChange={(e) => updateUserRole(user.id, e.target.value)}
+                            disabled={isCurrentUser}
+                          >
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {user.last_sign_in_at
+                            ? new Date(user.last_sign_in_at).toLocaleDateString()
+                            : 'Never'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedUserId(user.id);
+                                setShowPasswordDialog(true);
+                              }}
+                              disabled={isCurrentUser}
+                            >
+                              <KeyRound className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteUser(user.id)}
+                              disabled={isCurrentUser}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
           </CardContent>
         </Card>
 
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>SQL Helper</CardTitle>
-            <CardDescription>
-              Use this SQL to add users to the role system after creating them in Supabase
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <pre className="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
-{`-- After creating a user in Supabase Auth, run this SQL
--- Replace 'user@email.com' with the actual email
+        {/* Create User Dialog */}
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New User</DialogTitle>
+              <DialogDescription>
+                Create a new user account for the nail salon system
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                />
+              </div>
 
-INSERT INTO user_roles (user_id, role)
-SELECT id, 'user'
-FROM auth.users
-WHERE email = 'user@email.com'
-ON CONFLICT (user_id) DO NOTHING;
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                />
+              </div>
 
--- To make someone an admin:
-UPDATE user_roles
-SET role = 'admin'
-WHERE user_id = (SELECT id FROM auth.users WHERE email = 'user@email.com');`}
-            </pre>
-          </CardContent>
-        </Card>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="role">Role</Label>
+                <select
+                  id="role"
+                  className="w-full p-2 border rounded"
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Create User</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reset Password Dialog */}
+        <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reset Password</DialogTitle>
+              <DialogDescription>
+                Enter a new password for the user
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handlePasswordReset} className="space-y-4">
+              <div>
+                <Label htmlFor="new-password">New Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={passwordReset.password}
+                  onChange={(e) => setPasswordReset({ ...passwordReset, password: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                <Input
+                  id="confirm-new-password"
+                  type="password"
+                  value={passwordReset.confirmPassword}
+                  onChange={(e) => setPasswordReset({ ...passwordReset, confirmPassword: e.target.value })}
+                  required
+                />
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setShowPasswordDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Reset Password</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

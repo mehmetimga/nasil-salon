@@ -31,6 +31,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/dashboard/appointments', label: 'Appointments' },
+    { href: '/dashboard/bookings', label: 'Online Bookings' },
     { href: '/dashboard/services', label: 'Services' },
     ...(isAdmin ? [{ href: '/dashboard/admin', label: 'Admin' }] : []),
   ];
