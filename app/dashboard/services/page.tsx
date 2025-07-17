@@ -56,7 +56,7 @@ export default function ServicesPage() {
     checkAdminRole();
     fetchCategories();
     fetchServices();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkAdminRole = async () => {
     const { data: { user } } = await supabase.auth.getUser();

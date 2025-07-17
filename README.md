@@ -12,7 +12,8 @@ A comprehensive web application for managing nail salon operations including cus
 ## Features
 
 ### Implemented
-- 🔐 User authentication (signup/login)
+- 🔐 User authentication (login only - no public signup)
+- 👤 Admin-only user management
 - 📊 Customer management dashboard
 - ➕ Add new customer records
 - 💅 Service catalog with categories and pricing
@@ -20,6 +21,7 @@ A comprehensive web application for managing nail salon operations including cus
 - 👨‍💼 Basic staff management
 - 🔄 Quick booking from customer records
 - 👥 Role-based access control (Admin/User)
+- 🔒 Secure access - only admins can create users
 - 📱 Responsive design
 - 🎨 Modern UI with shadcn/ui components
 
@@ -146,7 +148,13 @@ Before you begin, ensure you have:
    
    Run the SQL from `sql/appointments_and_staff.sql` to create appointment booking tables, staff management, and sample data.
 
-3. **Get your project credentials**
+6. **Create Initial Admin User**
+   
+   - First, create a user account in Supabase Auth dashboard
+   - Then run the SQL from `sql/create_admin_user.sql` (update the email first)
+   - This admin can then manage all other users from within the app
+
+7. **Get your project credentials**
    - Go to Project Settings > API
    - Copy your `Project URL` and `anon public` key
 
@@ -228,21 +236,29 @@ nail-salon/
 
 ## Usage
 
-1. **Sign Up**: Create a new account on the signup page
-2. **Log In**: Access your dashboard with your credentials
-3. **Add Customers**: Use the form to add new customer records
-4. **View Records**: See all your customer visits in the table
+### For Administrators
 
-### Admin Features
+1. **Initial Setup**: 
+   - Create the first admin user in Supabase Auth dashboard
+   - Run the SQL to assign admin role
+   - Log in with admin credentials
+   
+2. **User Management**:
+   - Navigate to Admin page to manage users
+   - Create new users via Supabase dashboard
+   - Assign roles (user/admin) from the Admin page
+   
+3. **System Management**:
+   - Manage services and pricing
+   - View all customer records
+   - Access all appointments
 
-Admin users can view all customer records across the system. To make a user an admin:
+### For Regular Users
 
-1. First create the user through the signup page or Supabase Dashboard
-2. Run this SQL in Supabase SQL Editor:
-   ```sql
-   SELECT make_user_admin('user@email.com');
-   ```
-3. The user will now see all customers when they log in
+1. **Log In**: Access your dashboard with credentials provided by admin
+2. **Add Customers**: Use the form to add new customer records
+3. **Book Appointments**: Schedule appointments from the calendar or customer records
+4. **View Records**: See your customer visits and appointments
 
 ## Security Notes
 

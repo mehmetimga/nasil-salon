@@ -3,15 +3,37 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/dashboard/appointments', label: 'Appointments' },
-  { href: '/dashboard/services', label: 'Services' },
-];
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function Navigation() {
   const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    checkAdminRole();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const checkAdminRole = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      setIsAdmin(roleData?.role === 'admin');
+    }
+  };
+
+  const navItems = [
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/dashboard/appointments', label: 'Appointments' },
+    { href: '/dashboard/services', label: 'Services' },
+    ...(isAdmin ? [{ href: '/dashboard/admin', label: 'Admin' }] : []),
+  ];
 
   return (
     <nav className="border-b">

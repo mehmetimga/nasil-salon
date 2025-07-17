@@ -54,7 +54,7 @@ export default async function DashboardPage() {
     customersQuery = customersQuery.eq('user_id', user.id)
   }
   
-  const { data: customers, error } = await customersQuery
+  const { data: customers } = await customersQuery
     .order('created_at', { ascending: false })
 
   return (

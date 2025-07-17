@@ -115,7 +115,7 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
         // Alternative: reload the entire page
         window.location.reload()
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)

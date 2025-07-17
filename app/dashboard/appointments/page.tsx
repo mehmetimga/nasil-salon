@@ -94,7 +94,7 @@ export default function AppointmentsPage() {
     fetchServices();
     fetchCustomers();
     fetchAppointments();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchStaff = async () => {
     const { data, error } = await supabase
